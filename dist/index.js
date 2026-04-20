@@ -1,28 +1,39 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
+import { string, z } from "zod";
 import { readFileSync, writeFileSync, existsSync } from "fs";
-const tasks = existsSync("tasks.json")
-    ? JSON.parse(readFileSync("tasks.json", "utf-8"))
+import { join } from "path";
+const TASKS_FILE = "/Users/kenshin/files/my-mcp/tasks.json";
+const tasks = existsSync(TASKS_FILE)
+    ? JSON.parse(readFileSync(TASKS_FILE, "utf-8"))
     : [];
 const server = new McpServer({
     name: "my-first-mcp",
     version: "1.0.0",
 });
-server.tool("add_task", "Добавляет новую задачу", { title: z.string() }, async ({ title }) => {
+server.tool("add_task", "Добавляет новую задачу", { title: z.string(), priority: z.enum(["low", "medium", "high"]), dueDate: z.string().optional() }, async ({ title, priority, dueDate }) => {
     const task = {
         id: tasks.length + 1,
         title: title,
         completed: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        priority: priority,
+        dueDate: dueDate ? new Date(dueDate) : undefined
     };
     tasks.push(task);
-    writeFileSync("tasks.json", JSON.stringify(tasks, null, 2));
+    writeFileSync(TASKS_FILE, JSON.stringify(tasks, null, 2));
     return { content: [{ type: "text", text: `Новая задача добавлена: ${task.title} (id: ${task.id}) ` }] };
 });
-server.tool("list_tasks", "Возвращает все задачи", {}, async () => {
+server.tool("list_tasks", "Возвращает все задачи", { filter: z.enum(["all", "completed", "pending"]).optional() }, async ({ filter }) => {
+    let filtered = tasks;
+    if (filter === "completed") {
+        filtered = tasks.filter(t => t.completed == true);
+    }
+    else if (filter === "pending") {
+        filtered = tasks.filter(t => t.completed == false);
+    }
     return {
-        content: [{ type: "text", text: `Список всех задач: ${JSON.stringify(tasks, null, 2)}` }]
+        content: [{ type: "text", text: `Список всех задач: ${JSON.stringify(filtered, null, 2)}` }]
     };
 });
 server.tool("complete_task", "Помечает задачу как выполненную", { id: z.number() }, async ({ id }) => {
@@ -33,7 +44,7 @@ server.tool("complete_task", "Помечает задачу как выполн�
         };
     }
     task.completed = true;
-    writeFileSync("tasks.json", JSON.stringify(tasks, null, 2));
+    writeFileSync(TASKS_FILE, JSON.stringify(tasks, null, 2));
     return {
         content: [{ type: "text", text: `Задача с id: ${id} выполнена!` }]
     };
@@ -46,7 +57,7 @@ server.tool("delete_task", "Удаляет задачу", { id: z.number() }, as
         };
     }
     tasks.splice(task, 1);
-    writeFileSync("tasks.json", JSON.stringify(tasks, null, 2));
+    writeFileSync(TASKS_FILE, JSON.stringify(tasks, null, 2));
     return {
         content: [{ type: "text", text: `Задача с id: ${id} удалена!` }]
     };

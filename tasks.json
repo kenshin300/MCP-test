@@ -4,5 +4,27 @@
     "title": "Покормить собаку",
     "completed": false,
     "createdAt": "2026-04-20T20:31:21.297Z"
+  },
+  {
+    "id": 2,
+    "title": "Купить молоко",
+    "completed": false,
+    "createdAt": "2026-04-20T21:09:58.941Z"
+  },
+  {
+    "id": 3,
+    "title": "сходить к врачу",
+    "completed": false,
+    "createdAt": "2026-04-20T21:36:55.603Z",
+    "priority": "high",
+    "dueDate": "2026-12-31T00:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "title": "Сходить на встречу",
+    "completed": false,
+    "createdAt": "2026-04-20T21:38:07.035Z",
+    "priority": "high",
+    "dueDate": "2026-04-22T00:00:00.000Z"
   }
 ]
